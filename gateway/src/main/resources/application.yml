@@ -1,0 +1,74 @@
+server:
+  port: 8088
+
+---
+
+spring:
+  profiles: default
+  cloud:
+    gateway:
+      routes:
+        - id: Contract
+          uri: http://localhost:8081
+          predicates:
+            - Path=/contracts/** 
+        - id: Pay
+          uri: http://localhost:8082
+          predicates:
+            - Path=/pays/** 
+        - id: Reservation
+          uri: http://localhost:8083
+          predicates:
+            - Path=/reservations/** 
+        - id: Notification
+          uri: http://localhost:8084
+          predicates:
+            - Path= /infomations/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+
+---
+
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: Contract
+          uri: http://contracts:8080
+          predicates:
+            - Path=/contracts/** 
+        - id: Pay
+          uri: http://pay:8080
+          predicates:
+            - Path=/pays/** 
+        - id: Reservation
+          uri: http://reservation:8080
+          predicates:
+            - Path=/reservations/** 
+        - id: Notification
+          uri: http://notification:8080
+          predicates:
+            - Path= /infomations/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
