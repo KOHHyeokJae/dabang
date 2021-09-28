@@ -17,20 +17,76 @@ public class InfomationViewHandler {
     @Autowired
     private InfomationRepository infomationRepository;
 
+    // @StreamListener(KafkaProcessor.INPUT)
+    // public void whenContracted_then_CREATE_1 (@Payload Contracted contracted) {
+    //     try {
+
+    //         if (!contracted.validate()) return;
+
+    //         // view 객체 생성
+    //         Infomation infomation = new Infomation();
+    //         // view 객체에 이벤트의 Value 를 set 함
+    //         infomation.setContractId(contracted.getContractId());
+    //         infomation.setContractstatus(contracted.getStatus());
+    //         // view 레파지 토리에 save
+    //         infomationRepository.save(infomation);
+
+    //     }catch (Exception e){
+    //         e.printStackTrace();
+    //     }
+    // }
+
+
+    // @StreamListener(KafkaProcessor.INPUT)
+    // public void whenPaid_then_UPDATE_1(@Payload Paid paid) {
+    //     try {
+    //         if (!paid.validate()) return;
+    //             // view 객체 조회
+
+    //                 List<Infomation> infomationList = infomationRepository.findByContractId(paid.getContractId());
+    //                 if(infomationList.size() == 0){
+    //                     Infomation infomation = new Infomation();
+    //                     infomation.setContractId(paid.getContractId());
+    //                     infomation.setContractstatus(paid.getStatus());
+    //                     infomationRepository.save(infomation);
+    //                 }
+                    
+    //                 for(Infomation infomation : infomationList){
+    //                 // view 객체에 이벤트의 eventDirectValue 를 set 함
+    //                 infomation.setPaystatus(paid.getStatus());
+    //             // view 레파지 토리에 save
+    //             infomationRepository.save(infomation);
+    //             }
+
+    //     }catch (Exception e){
+    //         e.printStackTrace();
+    //     }
+    // }
+
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenContracted_then_CREATE_1 (@Payload Contracted contracted) {
+    public void whenContracted_then_CREATE_1 (@Payload Paid paid) {
         try {
 
-            if (!contracted.validate()) return;
-
-            // view 객체 생성
+            if (!paid.validate()) return;
+            List<Infomation> infomationList = infomationRepository.findByContractId(paid.getContractId());
+            
+            if(infomationList.size() > 0){
+                for(Infomation infomation : infomationList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    infomation.setPaystatus(paid.getStatus());
+                    // view 레파지 토리에 save
+                    infomationRepository.save(infomation);
+                }
+            }
+            else{
+                // view 객체 생성
             Infomation infomation = new Infomation();
             // view 객체에 이벤트의 Value 를 set 함
-            infomation.setContractId(contracted.getContractId());
-            infomation.setContractstatus(contracted.getStatus());
+            infomation.setContractId(paid.getContractId());
+            infomation.setPaystatus(paid.getStatus());
             // view 레파지 토리에 save
             infomationRepository.save(infomation);
-
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -38,22 +94,22 @@ public class InfomationViewHandler {
 
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenPaid_then_UPDATE_1(@Payload Paid paid) {
+    public void whenPaid_then_UPDATE_1(@Payload Contracted contracted) {
         try {
-            if (!paid.validate()) return;
+            if (!contracted.validate()) return;
                 // view 객체 조회
 
-                    List<Infomation> infomationList = infomationRepository.findByContractId(paid.getContractId());
+                    List<Infomation> infomationList = infomationRepository.findByContractId(contracted.getContractId());
                     if(infomationList.size() == 0){
                         Infomation infomation = new Infomation();
-                        infomation.setContractId(paid.getContractId());
-                        infomation.setContractstatus(paid.getStatus());
+                        infomation.setContractId(contracted.getContractId());
+                        infomation.setContractstatus(contracted.getStatus());
                         infomationRepository.save(infomation);
                     }
                     
                     for(Infomation infomation : infomationList){
                     // view 객체에 이벤트의 eventDirectValue 를 set 함
-                    infomation.setPaystatus(paid.getStatus());
+                    infomation.setContractstatus(contracted.getStatus());
                 // view 레파지 토리에 save
                 infomationRepository.save(infomation);
                 }

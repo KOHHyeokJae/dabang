@@ -19,7 +19,7 @@ public class PolicyHandler{
 
         System.out.println("\n\n##### listener Reservationinfo : " + paid.toJson() + "\n\n");
         Reservation reservation = new Reservation();
-        reservation.setStatus("Reservation Confirmed");
+        reservation.setStatus("Reservation Completed");
         reservation.setContractId(paid.getContractId());
         reservationRepository.save(reservation);
 

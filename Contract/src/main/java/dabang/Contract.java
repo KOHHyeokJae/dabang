@@ -47,10 +47,15 @@ public class Contract {
         ContractApplication.applicationContext.getBean(dabang.external.PayService.class)
             .payment(pay);
 
+      
+
+    }
+
+    @PostUpdate
+    public void onPostUpdate(){
         Contractcanceled contractcanceled = new Contractcanceled();
         BeanUtils.copyProperties(this, contractcanceled);
         contractcanceled.publishAfterCommit();
-
     }
 
     public Long getId() {
