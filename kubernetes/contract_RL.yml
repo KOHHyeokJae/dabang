@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contract
+  labels:
+    app: contract
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: contract
+  template:
+    metadata:
+      labels:
+        app: contract
+    spec:
+      containers:
+        - name: contract
+          image: user0101.azurecr.io/contract:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: applocation
+                  key: applocationvalue
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: contract
+  labels:
+    app: contract
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: contract

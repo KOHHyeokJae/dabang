@@ -44,7 +44,7 @@ spring:
     gateway:
       routes:
         - id: Contract
-          uri: http://contracts:8080
+          uri: http://contract:8080
           predicates:
             - Path=/contracts/** 
         - id: Pay
@@ -56,7 +56,7 @@ spring:
           predicates:
             - Path=/reservations/** 
         - id: Notification
-          uri: http://notification:8080
+          uri: http://push:8080
           predicates:
             - Path= /infomations/**
       globalcors:

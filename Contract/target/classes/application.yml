@@ -76,10 +76,3 @@ spring:
 api:
   pay:
     url: http://pay:8080
-feign:
-  hystrix:
-    enabled: true
-hystrix:
-  command:
-    default:
-      execution.isolation.thread.timeoutInMilliseconds: 610
