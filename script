@@ -1,0 +1,27 @@
+http http://localhost:8081/orders orderId=1111 roomNo=101 guest=1 status=ordered name=khj1 cardNo=1234
+http http://localhost:8081/orders orderId=2222 roomNo=102 guest=2 status=ordered name=khj2 cardNo=4567
+http http://localhost:8081/orders orderId=3333 roomNo=103 guest=3 status=ordered name=khj3 cardNo=7890
+http http://localhost:8081/orders orderId=4444 roomNo=104 guest=4 status=ordered name=khj4 cardNo=1234
+
+http http://localhost:8081/orderstatuses
+
+http http://localhost:8081/orders
+http http://localhost:8082/reservationProcessings
+http http://localhost:8083/paymentHistories
+
+---------------------------------------------------------------------------------------------------------------------
+version2
+---------------------------------------------------------------------------------------------------------------------
+
+./kafka-console-consumer.sh --bootstrap-server http://localhost:9092 --topic dabang --from-beginning
+
+http http://localhost:8081/orders customerId=1 roomNo=101 cardNo=1234 guest=1 status=ordered orderId=1111 
+http http://localhost:8081/orders customerId=2 roomNo=102 cardNo=1234 guest=2 status=ordered orderId=2222
+http http://localhost:8081/orders customerId=3 roomNo=103 cardNo=1234 guest=3 status=ordered orderId=3333
+
+http http://localhost:8084/infomations
+
+siege -c100 -t60S -v --content-type "application/json" 'http://localhost:8081/orders POST {"customerId": "1111"}'
+
+
+

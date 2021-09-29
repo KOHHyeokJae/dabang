@@ -1,0 +1,183 @@
+user01-rsrcgrp
+user01-aks
+user0101.azurecr.io
+
+az login
+az account set --subscription "종량제1"
+az aks get-credentials --resource-group user01-rsrcgrp --name user01-aks
+az aks get-credentials --resource-group grp05-rsrcgrp --name grp05-aks
+kubectl get svc
+az acr login --name user0101
+az acr login --name grp05
+az aks update -n user01-aks -g user01-rsrcgrp --attach-acr user0101
+az aks update -n grp05-aks -g grp05-rsrcgrp --attach-acr grp05
+
+cd Order
+mvn package
+
+cd Pay
+mvn package
+
+cd Notification
+mvn package
+
+cd gateway
+mvn package
+
+cd Reservation
+mvn package
+
+#build & Push
+az acr build --registry user0101 --image user0101.azurecr.io/contract:v1 .
+az acr build --registry user0101 --image user0101.azurecr.io/pay:v1 .
+az acr build --registry user0101 --image user0101.azurecr.io/reservation:v1 .
+az acr build --registry user0101 --image user0101.azurecr.io/push:v1 .
+az acr build --registry user0101 --image user0101.azurecr.io/gateway:v1 .
+
+az acr build --registry grp05 --image grp05.azurecr.io/order:v1 .
+az acr build --registry grp05 --image grp05.azurecr.io/pay:v1 .
+az acr build --registry grp05 --image grp05.azurecr.io/reservation:v1 .
+az acr build --registry grp05 --image grp05.azurecr.io/notification:v1 .
+az acr build --registry grp05 --image grp05.azurecr.io/gateway:v1 .
+
+
+
+kubectl apply -f /home/khj/git/roomreservation/Order/kubernetes/deployment.yml
+kubectl apply -f /home/khj/git/roomreservation/Order/kubernetes/service.yaml
+kubectl create configmap applocation --from-literal=applocationvalue=ACR
+kubectl get configmap applocation -o yaml
+
+kubectl apply -f /home/khj/git/roomreservation/Pay/kubernetes/deployment.yml
+kubectl apply -f /home/khj/git/roomreservation/Pay/kubernetes/service.yaml
+
+kubectl apply -f /home/khj/git/roomreservation/Reservation/kubernetes/deployment.yml
+kubectl apply -f /home/khj/git/roomreservaetion/Reservation/kubernetes/service.yaml
+
+kubectl apply -f /home/khj/git/roomreservation/Notification/kubernetes/deployment.yml
+kubectl apply -f /home/khj/git/roomreservation/Notification/kubernetes/service.yaml
+
+kubectl apply -f /home/khj/git/roomreservation/gateway/kubernetes/deployment.yml
+kubectl apply -f /home/khj/git/roomreservation/gateway/kubernetes/service.yaml
+
+kubectl delete deploy,service --all
+
+
+
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version
+############### helm version 2.xx ############### 
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+kubectl --namespace kube-system create sa tiller      # helm 의 설치관리자를 위한 시스템 사용자 생성
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account tiller
+
+kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+
+helm repo add incubator https://charts.helm.sh/incubator
+helm repo update
+helm install --name my-kafka --namespace kafka incubator/kafka
+
+############### helm version 3.xx ############### 
+kubectl --namespace kube-system create sa tiller      # helm 의 설치관리자를 위한 시스템 사용자 생성
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+
+helm repo add incubator https://charts.helm.sh/incubator
+helm repo update
+kubectl create ns kafka
+helm install my-kafka --namespace kafka incubator/kafka
+
+#craete
+kubectl -n kafka exec my-kafka-0 -- /usr/bin/kafka-topics --zookeeper my-kafka-zookeeper:2181 --topic dabang --create --partitions 1 --replication-factor 1
+
+#list
+kubectl -n kafka exec my-kafka-0 -- /usr/bin/kafka-topics --zookeeper my-kafka-zookeeper:2181 --list
+
+#kafka-consumer
+kubectl -n kafka exec -ti my-kafka-0 -- /usr/bin/kafka-console-consumer --bootstrap-server my-kafka:9092 --topic dabang --from-beginning
+
+#configmap create
+kubectl create configmap applocation --from-literal=applocationvalue=ACR
+
+http http://20.200.206.197:8080/orders customerId=1 roomNo=101 cardNo=1234 guest=1 status=ordered orderId=1111 
+http http://20.196.241.81:8080/orders customerId=1 roomNo=101 cardNo=1234 guest=1 status=ordered orderId=1111
+
+#Autoscale
+kubectl autoscale deployment order --cpu-percent=20 --min=1 --max=10
+
+
+
+
+
+siege.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: siege
+spec:
+  containers:
+  - name: siege
+    image: apexacme/siege-nginx
+    
+kubectl exec -it siege -- /bin/bash
+kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=15
+siege -c100 -t60S -v --content-type "application/json" 'http://10.0.247.8:8080/orders POST {"orderId": 1, "roomNo": 101}'
+livenessProbe : 컨테이너가 동작 중인지 여부를 나타낸다. 만약 활성 프로브(liveness probe)에 실패한다면, kubelet은 컨테이너를 죽이고, 해당 컨테이너는 재시작 정책의 대상이 된다. 만약 컨테이너가 활성 프로브를 제공하지 않는 경우, 기본 상태는 Success 이다.
+readinessProbe : 컨테이너가 요청을 처리할 준비가 되었는지 여부를 나타낸다. 만약 준비성 프로브(readiness probe)가 실패한다면, 엔드포인트 컨트롤러는 파드에 연관된 모든 서비스들의 엔드포인트에서 파드의 IP 주소를 제거한다. 준비성 프로브의 초기 지연 이전의 기본 상태는 Failure이다. 만약 컨테이너가 준비성 프로브를 지원하지 않는다면, 기본 상태는 Success 이다
+
+
+
+
+WARNING: This chart is deprecated
+NAME: my-kafka
+LAST DEPLOYED: Tue Sep 28 15:59:03 2021
+NAMESPACE: kafka
+STATUS: deployed
+REVISION: 1
+NOTES:
+### Connecting to Kafka from inside Kubernetes
+
+You can connect to Kafka by running a simple pod in the K8s cluster like this with a configuration like this:
+
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: testclient
+    namespace: kafka
+  spec:
+    containers:
+    - name: kafka
+      image: confluentinc/cp-kafka:5.0.1
+      command:
+        - sh
+        - -c
+        - "exec tail -f /dev/null"
+
+Once you have the testclient pod above running, you can list all kafka
+topics with:
+
+  kubectl -n kafka exec testclient -- ./bin/kafka-topics.sh --zookeeper my-kafka-zookeeper:2181 --list
+
+To create a new topic:
+
+  kubectl -n kafka exec testclient -- ./bin/kafka-topics.sh --zookeeper my-kafka-zookeeper:2181 --topic test1 --create --partitions 1 --replication-factor 1
+
+To listen for messages on a topic:
+
+  kubectl -n kafka exec -ti testclient -- ./bin/kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic test1 --from-beginning
+
+To stop the listener session above press: Ctrl+C
+
+To start an interactive message producer session:
+  kubectl -n kafka exec -ti testclient -- ./bin/kafka-console-producer.sh --broker-list my-kafka-headless:9092 --topic test1
+
+To create a message in the above session, simply type the message and press "enter"
+To end the producer session try: Ctrl+C
+
+If you specify "zookeeper.connect" in configurationOverrides, please replace "my-kafka-zookeeper:2181" with the value of "zookeeper.connect", or you will get error.
+
+
+
+
+
